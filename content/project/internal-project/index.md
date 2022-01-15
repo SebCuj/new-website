@@ -10,7 +10,7 @@ image:
 #  name: Follow
 #  url: https://twitter.com/georgecushen
 #slides: example
-summary: The paper addresses the exploitation of large data collections for foreign policy analysis.
+summary: This project addresses the exploitation of large data collections for foreign policy analysis.
 #tags:
 #- Deep Learning
 title: Big Data in FPA
