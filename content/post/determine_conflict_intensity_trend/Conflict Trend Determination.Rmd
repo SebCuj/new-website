@@ -1,0 +1,975 @@
+---
+title: "Determination of Interstate Conflict Trends with ICEWS"
+author: "Sebastian Cujai"
+date: "29.12.2021"
+output: html_document
+---
+````{r, include=FALSE}
+# https://www.youtube.com/watch?v=vLzXDzf8bNI
+# https://haozhu233.github.io/kableExtra/awesome_table_in_html.html#Getting_Started
+library(knitr)
+# define options
+show = FALSE
+opts_chunk$set(echo = show,
+               error = show,
+               warning = show,
+               message = show,
+               fig.height = 6,
+               fig.width = 10)
+````
+
+<div style="line-height: 2em;"> 
+
+<br>
+
+I draw on event data from the *Integrated Crisis Early Warning Systems* (ICEWS) data set to determine interstate conflict trends.[^1] The data set contains a large amount of verbal as well as physical conflict actions providing a more detailed view on conflict dynamics. Each conflict action is also assigned an intensity whereby different scales are used. Here, I use the upper range of the CAMEO scale which is used to classify conflict actions (greater than 9). Tab. 1 shows all levels (lvl0) and sub-levels (lvl1) from the intensity scale including a short description. I only use the top level of the scale to determine the intensity of conflict actions.
+
+**Tab. 1** Cooperation and Conflict Intensities according to CAMEO Scale
+
+````{r}
+# load packages
+library(tidyverse)
+library(data.table)
+library(xml2)
+library(icews)
+library(lubridate)
+library(scales)
+library(gridExtra)
+library(here)
+library(kableExtra)
+# set working directory
+setwd(here("ICEWSdata"))
+# load event data files (1995-2019)
+eventFiles = list.files(pattern = "*.rds") %>%
+  map_df(~readRDS(.)) 
+# add new variables
+.addNewCameo = function(x) {
+  cameo_codes %>%
+    mutate(new_col = stringr::str_replace_all(cameo_code, "^0","")) %>%
+    rename(CAMEO.Code = new_col) %>%
+    filter(!is.na(lvl1)) %>%
+    select(CAMEO.Code,name,quad_category,penta_category, order, lvl0) %>%
+    mutate_at(vars(CAMEO.Code),list(as.integer)) %>% # https://stackoverflow.com/questions/27668266/dplyr-change-many-data-types
+    right_join(x,by = "CAMEO.Code")
+}
+eveICEWS = .addNewCameo(eventFiles)
+# change country names// !!! Different names for countries
+.changeNames = function(x,y,z){
+  df = z %>% 
+    mutate(Source.Country = str_replace_all(Source.Country,x,y)) %>%
+    mutate(Target.Country = str_replace_all(Target.Country,x,y))
+  return(df)
+}
+eventsICEWS = .changeNames("Russian Federation","Russia",eveICEWS) %>% 
+  select(Event.Date,Source.Country, Source.Name, Target.Country, Target.Name, 
+         CAMEO.Code, lvl0, quad_category)
+# delete files from global environment
+rm("eventFiles","eveICEWS")
+# set new working directory
+setwd(here())
+# choose conflict dyad 
+sideA = "Georgia"
+sideB = "Russia"
+# create data set (country level)
+.selectCountrylevel = function (ff,gg) {
+  selectionA = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, ff) & str_detect(Target.Country, gg)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict")) 
+  }
+  selectionB = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, gg) & str_detect(Target.Country, ff)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict"))
+  }
+  dyad = bind_rows(selectionA (eventsICEWS),selectionB (eventsICEWS))
+  return(dyad)
+}
+dataCountryLevel = .selectCountrylevel(sideA,sideB)
+cameo_codes %>% 
+  select(lvl0,lvl1,name,quad_category,description) %>% 
+  kbl(format = "html") %>% 
+  kable_paper() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) %>% 
+  scroll_box(width = "90%", height = "200px")
+````
+
+<br>
+
+I illustrate my thoughts by looking at the interstate conflict between Georgia and Russia (see Tab. 2). Looking at the identified conflict events, the acting parties are associated with a country (Source/Target.Country) and then further specified by a name (Source/Target.Name). However, for many events, the name of the country is only provided as a specification. In addition, there is no distinction between intrastate or interstate conflict events. 
+
+**Tab. 2** All Conflict Events between Russia and Georgia determined by the Country Variables
+
+````{r}
+dataCountryLevel %>% 
+  kbl(format = "html") %>% 
+  kable_paper() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover")) %>% 
+  scroll_box(width = "90%", height = "200px")
+````
+
+<br>
+
+According to the described data structure, there are several ways to use the information to identify interstate conflict trends.
+
+(1) I can create a data set by selecting only conflict events based on the variables *Source.Country* and *Target.Country*. The ***country data set*** (CDS) includes all events within the data set that involve both Georgia and Russia. The states can be either the source or the target. However, this data compilation does not distinguish whether the event affects only state actors or also non-state actors.
+
+(2) I can further optimize the previous compilation using the *Source.Name* and *Target.Name* variables to refine the selection. In order to exclusively select state actors, I create a list of keywords consisting of all relevant foreign policy state actors. Using this list, I identify conflict events that take place between predefined state actors. Frequently, the country name is stated as the source/target name (see Tab. 2). In the ***name data set*** (NDS), I consider these events as interstate actions.
+
+In creating the keyword list, I differentiate between the categories state institutions and state officials, choosing different approaches for the compilation.
+
+* The compilation of ***state institutions*** is based on a review of all Russian-Georgian actors listed in the columns *Source.Name* and *Target.Name*. I only select terms from the list that are directly related to the state’s foreign policy institutions. This covers, for example, the Ministry of Foreign Affairs or the Ministry of Defense. In this category, I also include the titles of senior government positions.
+
+* In compiling the names of ***state officials***, I use Wikipedia to manually gather a list of state leaders and government members who have a direct connection to the state’s foreign policy. 
+
+From these collections, I then compile the keyword list to extract interstate conflict events. Figure 1 shows the distribution of conflict events in the CDS that are either exclusively interstate (excl_interstate) or including non-state actors (incl_nsa). Depending on the year in question, the figure shows that conflict events, including non-state actors, represent up to one third of the events.
+
+**Fig. 1** Distribution of Conflict Events Including and Excluding Non-State Actors
+````{r}
+# create data set (country level)
+.selectCountrylevel = function (ff,gg) {
+  selectionA = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, ff) & str_detect(Target.Country, gg)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict")) 
+  }
+  selectionB = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, gg) & str_detect(Target.Country, ff)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict"))
+  }
+  dyad = bind_rows(selectionA (eventsICEWS),selectionB (eventsICEWS))
+  return(dyad)
+}
+dataCountryLevel = .selectCountrylevel(sideA,sideB)
+# create data set (sorted by NSA and state)
+.sortActorNSA = function (zz) {
+  setwd(here())
+  # identify all active conflict actors
+  .selectInstPer = function(x) {
+    df = x %>%
+      select(Source.Name) %>%
+      distinct() %>%
+      as_tibble()
+    return(df)
+  }
+  InstPer = .selectInstPer(zz)
+  # extract only state institutions
+  .selectInst = function(x) {
+    # extract the most relevant state institutions // https://stackoverflow.com/questions/23678691/converting-a-text-file-into-a-vector-in-r
+    relInst = scan(file = "relevant_institutions.txt", character(), quote = "", sep = ",")
+    relStateInst = c(paste0("^",sideA,"$"),paste0("^",sideB,"$"),relInst)
+    instList = paste(unlist(relStateInst), collapse = "|")
+    stateInst = x %>%
+      filter (str_detect(Source.Name, instList))
+    return(stateInst) }
+  inst = .selectInst(InstPer)
+  # delete wrong results
+  .deleteAct = function(x) {
+    deleteSet = scan(file = "irrelevant_institutions.txt", character(), quote = "", sep = ",")
+    delInst = paste(unlist(deleteSet), collapse = "|")
+    finListInst = x %>%
+      filter (!str_detect(Source.Name, delInst))
+    return(finListInst)}
+  finInst = .deleteAct(inst)
+  # create a list of all foreign policy decision-makers
+  .pullLeaders = function(x) {
+    df = read_xml("leader_FP.xml")
+    data = tibble(
+      Source.Name = df %>% xml_find_all(paste0(".//",x,"//.//.//name")) %>% xml_text()) %>%  
+      distinct()
+    return(data)
+  }
+  finPer = bind_rows(.pullLeaders(sideA),.pullLeaders(sideB))
+  # create a list of all active state actors
+  finInstPer = bind_rows(finInst,finPer)
+  # create new data set based on state leaders and institutions
+  .chooseStateEvents = function(x) {
+    compiNames = finInstPer %>% pull()
+    stateDF = x %>%
+      filter(Source.Name %in% compiNames) %>% 
+      filter(Target.Name %in% compiNames) %>%
+      select(Event.Date,Source.Name,Target.Name,CAMEO.Code) %>% 
+      mutate(distinction = rep("excl_interstate"))
+    return(stateDF)
+  } # create data frame for all state actors (specified and unspecified)
+  .chooseNSAEvents = function(x) {
+    compiNames = finInstPer %>% pull()
+    # https://stackoverflow.com/questions/38351820/negation-of-in-in-r
+    "%nin%" <- function(x, table) match(x, table, nomatch = 0L) == 0L
+    a = x %>% 
+      mutate(id = 1:length(Event.Date)) %>%  
+      filter(Source.Name %nin% compiNames)
+    b = x %>% 
+      mutate(id = 1:length(Event.Date)) %>% 
+      filter(Target.Name %nin% compiNames)
+    nsaDF = bind_rows(a,b) %>% 
+      distinct(id, .keep_all = TRUE) %>% 
+      select(Event.Date,Source.Name,Target.Name,CAMEO.Code) %>% 
+      mutate(distinction = rep("incl_nsa"))
+    return(nsaDF)} # create data frame for all NSA
+  .chooseUnspecificEvents = function(x) {
+    compiNames = paste0(finInstPer %>% 
+                          filter(!str_detect(Source.Name,paste0("^",sideA,"$|","^",sideB,"$"))) %>%
+                          pull() %>% 
+                          paste0(collapse = "|"),"|^",sideA,"$|","^",sideB,"$")
+    stateDF = x %>%
+      filter(str_detect(Source.Name,compiNames)) %>% 
+      filter(str_detect(Target.Name,compiNames)) %>%
+      select(Event.Date,Source.Name,Target.Name,CAMEO.Code)
+    a = stateDF %>% 
+      mutate(id = 1:length(Event.Date)) %>%  
+      filter(str_detect(Source.Name,paste0("^",sideA,"$|","^",sideB,"$")))
+    b = stateDF %>% 
+      mutate(id = 1:length(Event.Date)) %>% 
+      filter(str_detect(Target.Name,paste0("^",sideA,"$|","^",sideB,"$")))
+    unspecificDF = bind_rows(a,b) %>% 
+      distinct(id, .keep_all = TRUE) %>% 
+      select(Event.Date,Source.Name,Target.Name,CAMEO.Code) %>% 
+      mutate(distinction = rep("unspecific"))
+    return(unspecificDF)} # create data frame for all unspecified state actors
+  df = bind_rows(.chooseStateEvents(zz),.chooseNSAEvents(zz))
+  return(df)
+}
+dataActorNSA = .sortActorNSA(dataCountryLevel)
+# plot percentage of conflict actions (including and excluding non-state actors)
+.plotPercent = function(x) {
+  df = x %>%
+    mutate(date = str_replace_all(Event.Date,"[0-9]{2}-[0-9]{2}$","01-01")) %>% 
+    mutate(date = as.POSIXct(date)) %>%
+    select(date,distinction) %>%
+    arrange(date) %>%
+    group_by(date) %>% 
+    mutate(sum = n()) %>% 
+    group_by(date,distinction) %>% 
+    mutate(count = n()) %>% 
+    mutate(percent = (100/sum)*count) %>%
+    mutate(id = ifelse(count > 999, 1, 0)) %>% 
+    distinct()
+  #https://stackoverflow.com/questions/6112803/how-to-create-a-consecutive-group-number
+  # setDT(df)[,group :=rleid(id)]
+  df$distinction <- factor(df$distinction,levels = c("incl_nsa","excl_interstate"))
+  graph = ggplot(df,aes(x = date,y = percent, fill = distinction)) + 
+    geom_col() +
+    # https://stackoverflow.com/questions/16725927/how-not-to-display-value-0-in-a-stacked-bar-chart-using-ggplot2
+    geom_text(data = subset(df,count != 0), aes(label = count), position = position_stack(vjust = 0.5), size = 2.5, color = "black") +
+    labs (caption = paste0("Source: ICEWS ",str_extract(min(x$Event.Date),"^[0-9]{4}")," - ",str_extract(max(x$Event.Date),"^[0-9]{4}")),
+          x = "Date",
+          y = "Coverage (%)") +
+    scale_x_datetime(labels = date_format("%Y"), 
+                     breaks = date_breaks("1 year")) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = 60, vjust = 1, size = 8, margin = margin (13,13,0,0)),
+          plot.margin = unit(c(1, 2, 1, 2), "cm"),legend.position = "top",legend.title = element_blank()) +
+    scale_fill_manual(values=c("#25A897","#67F5E2"))
+  return(graph)
+}
+plot = .plotPercent(dataActorNSA)
+plot
+````
+
+However, these results do not provide information on whether the incorporation of conflict events involving non-state actors has an effect on determining the intensities of interstate conflict. To examine this, I then compare the conflict intensities of the CDS with those of the NDS. For this comparison, I use the conflict acts with the highest intensity in a month to determine conflict intensities. Figure 2 shows clear deviations between both data sets. The intensities in the NDS (excl_interstate) are often significantly lower than the intensities in the CDS (incl_nsa).
+
+**Fig. 2** Comparing the Highest Conflict Intensities in Both Data Compilations
+````{r, fig.height = 10, fig.width = 10}
+# create data set (country level)
+.selectCountrylevel = function (ff,gg) {
+  selectionA = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, ff) & str_detect(Target.Country, gg)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict")) 
+  }
+  selectionB = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, gg) & str_detect(Target.Country, ff)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict"))
+  }
+  dyad = bind_rows(selectionA (eventsICEWS),selectionB (eventsICEWS)) %>%
+    select(Event.Date,Source.Country,Source.Name,Target.Name,CAMEO.Code,lvl0) %>%
+    mutate(distinction = rep("incl_nsa"))
+  return(dyad)
+}
+dataCountryLevel = .selectCountrylevel(sideA,sideB)
+# create data set (sorted by NSA and state)
+.selectStateLevel = function (zz,ff,gg) {
+  setwd(here())
+  # identify all active conflict actors
+  .selectInstPer = function(x) {
+    df = x %>%
+      select(Source.Name) %>%
+      distinct() %>%
+      as_tibble()
+    return(df)
+  }
+  InstPer = .selectInstPer(zz)
+  # extract only state institutions
+  .selectInst = function(x) {
+    # extract the most relevant state institutions // https://stackoverflow.com/questions/23678691/converting-a-text-file-into-a-vector-in-r
+    relInst = scan(file = "relevant_institutions.txt", character(), quote = "", sep = ",")
+    relStateInst = c(paste0("^",sideA,"$"),paste0("^",sideB,"$"),relInst)
+    instList = paste(unlist(relStateInst), collapse = "|")
+    stateInst = x %>%
+      filter (str_detect(Source.Name, instList))
+    return(stateInst) }
+  inst = .selectInst(InstPer)
+  # delete wrong results
+  .deleteAct = function(x) {
+    deleteSet = scan(file = "irrelevant_institutions.txt", character(), quote = "", sep = ",")
+    delInst = paste(unlist(deleteSet), collapse = "|")
+    finListInst = x %>%
+      filter (!str_detect(Source.Name, delInst))
+    return(finListInst)}
+  finInst = .deleteAct(inst)
+  # create a list of all leaders and government officials 
+  .pullLeaders = function(x){
+    df = read_xml("leader_FP.xml")
+    data = tibble(
+      names = df %>% xml_find_all(paste0(".//",x,"//.//.//name")) %>% xml_text()) %>%  
+      distinct()
+    return(data)
+  }
+  finPer = bind_rows(.pullLeaders(sideA),.pullLeaders(sideB))
+  # compare the list of state actors with all conflict actors => only state actors
+  .chooseActivePer = function(x,y) {
+    actList = paste(unlist(x$names), collapse = "|")
+    stateAct = y %>%
+      filter (str_detect(Source.Name, actList))
+    return(stateAct)
+  }
+  finPer = .chooseActivePer (finPer,InstPer)
+  # create a list of all active state actors
+  finInstPer = bind_rows(finInst,finPer)
+  # create new data set based on state leaders and institutions
+  .chooseStateEvents = function(x) {
+    compiNames = finInstPer %>% pull()
+    stateDF = x %>%
+      filter(Source.Name %in% compiNames) %>% 
+      filter(Target.Name %in% compiNames) %>%
+      select(Event.Date,Source.Country,Source.Name,Target.Name,CAMEO.Code,lvl0) %>% 
+      mutate(distinction = rep("excl_interstate"))
+    return(stateDF)
+  } # create data frame for all state actors (specified and unspecified)
+  df = .chooseStateEvents(zz)
+  return(df)
+}
+# create data set for comparison
+df = bind_rows(dataCountryLevel,.selectStateLevel(dataCountryLevel,sideA,sideB))
+.compareInt = function(x,y) {
+  data = x %>%
+    filter(Source.Country == y) %>% 
+    mutate(year = unlist(str_extract_all(Event.Date,"^[0-9]{4}"))) %>% 
+    group_by(Event.Date,distinction) %>%
+    slice(which.max(lvl0)) %>%
+    rename(intensity = lvl0) %>% 
+    ungroup() %>% 
+    mutate(Dummy.Date = str_replace_all(Event.Date, "^[0-9]{4}","1995")) %>%
+    # changing datetime format for ggplot
+    mutate_at(vars(Dummy.Date),as.POSIXct)
+  plot = data %>% 
+    ggplot(aes(x = Dummy.Date, y = intensity, group = distinction, color = distinction)) +
+    geom_line() +
+    geom_point() +
+    #geom_bar(stat="identity", position = position_dodge()) +
+    scale_colour_manual(values = c("darkred","steelblue")) +
+    geom_hline(yintercept = 14, color = "black", linetype = "dashed") +
+    labs (caption = "Source: ICEWS 1995-2019",
+          x = "Date",
+          y = "Intensity",
+          color = "") +
+    # https://stackoverflow.com/questions/51033854/x-axis-duplicates-for-a-time-series-using-facet-wrap-in-ggplot
+    scale_x_datetime(labels = date_format("%b"), 
+                     breaks = date_breaks("2 months")) +
+    scale_y_continuous(breaks = seq(8,21, by = 1)) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = 60, vjust = 0.7, size = 8, margin = margin (8,0,0,0), colour = "black"),
+          axis.text.y = element_text(size = 9, margin = margin (0,5,0,5), colour = "black"),
+          strip.text = element_text(colour = "black"),
+          plot.margin = unit(c(1, 2, 1, 2), "cm"),
+          legend.position = "top") +
+    facet_wrap(~ year, nrow = 4)
+  return(plot) }
+comparison = .compareInt(df,sideA)
+comparison
+````
+
+Given the previous results, I expect observable differences between the applied data compilations when determining the interstate conflict trend. For verification, I compare the results of both compilations (CDS & NDS). The figures show the intensity of conflict actions occurring in the interstate conflict. The trend line illustrates the tendency of conflict actions over the period under investigation (1994-2018).
+
+Furthermore, to check the plausibility of identified trend lines, I review Russian-Georgian relations and identify several central escalation phases. The first phase starts in ***1998*** when the Georgian president Shevardnadze begins to adopt a more confrontational attitude toward Russia causing relations to deteriorate significantly. In September 2001, the second escalation phase begins after Russia increasingly accuses the Georgian government of supporting Chechen rebels. In ***August 2002***, the situation drastically intensifies after Russia considers to conduct unilateral operations against Chechen separatists on Georgian territory. Shortly later, Russian President Vladimir Putin issued a statement threatening to order military strikes in Georgia to stop cross-border attacks on Russian territory. After a brief period of cooperation, the Russian government ends its cooperation with Georgia following Georgia's military response to a crisis in South Ossetia in ***August 2004***. Thereafter, the intensity of interstate conflict measures steadily increases. In ***September 2006***, a major diplomatic dispute erupted when Georgia accused four Russian military officers of espionage and arrested them. The Russian government responded with a variety of sanctions against Georgia. In ***August 2008***, Georgian troops deployed to South Ossetia. In response to this military operation, Russia responded by sending its own troops into Georgian South Ossetia. The Georgian-Russian war breaks out. According to the previous insights, the dashed lines indicate either the beginning or the climax of an escalation in interstate conflict actions.
+
+Figure 3 shows that the data selection results in a much more pronounced trend line, whereby the emerging escalation trends can also be empirically substantiated.
+
+**Fig.3** Intensity of Monthly Conflict Actions & Trend Line (Comparing CDS & NDS)
+
+````{r, fig.height = 8, fig.width = 10}
+# create data set (country level)
+.selectCountrylevel = function (ff,gg) {
+  selectionA = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, ff) & str_detect(Target.Country, gg)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict")) 
+  }
+  selectionB = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, gg) & str_detect(Target.Country, ff)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict"))
+  }
+  dyad = bind_rows(selectionA (eventsICEWS),selectionB (eventsICEWS))
+  return(dyad)
+}
+dataCountryLevel = .selectCountrylevel(sideA,sideB)
+# plot conflict intensity trend line (country level)
+.monConIntTrend = function(df,ff,gg,tStart,tEnd,smoothVal) {
+  .monConInt = function(x) {
+      df %>%
+        filter(Source.Country == x) %>%
+        select(Event.Date,lvl0) %>%
+        filter(Event.Date >= tStart & Event.Date <= tEnd) %>%
+        group_by(Event.Date) %>%
+        slice(which.max(lvl0)) %>%
+        rename(intensity = lvl0) %>%
+        mutate(name = rep(x)) %>%
+        as.data.frame(stringsAsFactors = FALSE)
+    }
+  monConIntAB = bind_rows (monConIntA = .monConInt(ff), monConIntB = .monConInt(gg)) %>%
+  # changing datetime format for ggplot
+  mutate_at(vars(Event.Date),as.POSIXct) %>%
+  # Rename and re-order the factor levels before the plot 
+  # https://stackoverflow.com/questions/12075037/ggplot-legends-change-labels-order-and-title
+  mutate(name = factor(name,levels = c(sideA,sideB)))
+  dates = c(as.POSIXct("1998-01-01"),as.POSIXct("2002-08-01"),as.POSIXct("2004-08-01"),
+            as.POSIXct("2006-09-01"),as.POSIXct("2008-08-01"))
+  plot = monConIntAB %>% 
+      ggplot(aes(x = Event.Date, y = intensity, group = name, color = name)) +
+      geom_point()+
+      geom_smooth(method = "loess", span = smoothVal, se = FALSE) +
+      geom_hline(yintercept = 14, color = "black", linetype = "dashed") +
+      annotate(geom = "vline", x = dates, xintercept = dates,
+             linetype = c("dashed", "dashed","dashed","dashed","dashed")) +
+      annotate(geom = "text", label = format(dates, format = "%b %y"),
+             x = dates, y = c(9,8,9,8,9),
+             size = 3, hjust = - 0.1) +
+      labs (y = "Intensity",
+            color = "incl_nsa")+
+      scale_x_datetime(labels = date_format("%b %y"), 
+                       breaks = date_breaks("6 month")) +
+      scale_y_continuous(breaks = seq(8,21, by = 1)) +
+      theme_light() +
+      theme(axis.text.x = element_text(angle = 60, vjust = 1, size = 8, margin = margin (13,13,0,0)),
+            axis.title.x = element_blank(),
+            plot.margin = unit(c(1, 2, 0.5, 2), "cm"),
+            legend.position = "top")
+  return(plot)}
+intTrendCountry = .monConIntTrend(dataCountryLevel,sideA,sideB,tStart = "1995",tEnd = "2019",smoothVal = 0.2)
+# create data set (actor level) 
+.selectActorLevel = function (zz,ff,gg) {
+  # identify all active conflict actors
+  .selectInstPer = function(x) {
+    df = x %>%
+      select(Source.Name) %>%
+      distinct() %>%
+      as_tibble()
+    return(df)
+  }
+  InstPer = .selectInstPer(zz)
+  # extract only state institutions
+  .selectInst = function(x) {
+    # extract the most relevant state institutions // https://stackoverflow.com/questions/23678691/converting-a-text-file-into-a-vector-in-r
+    relInst = scan(file = "relevant_institutions.txt", character(), quote = "", sep = ",")
+    relStateInst = c(paste0("^",sideA,"$"),paste0("^",sideB,"$"),relInst)
+    instList = paste(unlist(relStateInst), collapse = "|")
+    stateInst = x %>%
+      filter (str_detect(Source.Name, instList))
+    return(stateInst) }
+  inst = .selectInst(InstPer)
+  # delete wrong results
+  .deleteAct = function(x) {
+    deleteSet = scan(file = "irrelevant_institutions.txt", character(), quote = "", sep = ",")
+    delInst = paste(unlist(deleteSet), collapse = "|")
+    finListInst = x %>%
+      filter (!str_detect(Source.Name, delInst))
+    return(finListInst)}
+  finInst = .deleteAct(inst)
+  # create a list of all leaders and government officials till 2009
+  .pullLeaders = function(x) {
+    df = read_xml("leader_FP.xml")
+    data = tibble(
+      names = df %>% xml_find_all(paste0(".//",x,"//.//.//name")) %>% xml_text()) %>%  
+      distinct()
+    return(data)
+  }
+  finPer = bind_rows(.pullLeaders(sideA),.pullLeaders(sideB))
+  # compare the list of state actors with all conflict actors => only state actors
+  .chooseActivePer = function(x,y) {
+    actList = paste(unlist(x$names), collapse = "|")
+    stateAct = y %>%
+      filter (str_detect(Source.Name, actList))
+    return(stateAct)
+  }
+  finPer = .chooseActivePer (finPer,InstPer)
+  # create a list of all active state actors
+  finInstPer = bind_rows(finInst,finPer)
+  # create new data set based on state leaders and institutions
+  .chooseStateEvents = function(x) {
+    compiNames = as.vector(finInstPer$Source.Name)
+    sourceList = x %>%
+      filter(Source.Name %in% compiNames) %>%
+      filter(Target.Name %in% compiNames) 
+    return(sourceList)
+  }
+  confEvents = .chooseStateEvents(zz)
+  return(confEvents)
+}
+dataActorLevel = .selectActorLevel(dataCountryLevel,sideA,sideB)
+# plot conflict intensity trend line (actor level) 
+.monConIntTrend = function(df,ff,gg,tStart,tEnd,smoothVal) {
+  .monConInt = function(x) {
+      df %>%
+        filter(Source.Country == x) %>%
+        select(Event.Date,lvl0) %>%
+        filter(Event.Date >= tStart & Event.Date <= tEnd) %>%
+        group_by(Event.Date) %>%
+        slice(which.max(lvl0)) %>%
+        rename(intensity = lvl0) %>%
+        mutate(name = rep(x)) %>%
+        as.data.frame(stringsAsFactors = FALSE)
+    }
+  monConIntAB = bind_rows (monConIntA = .monConInt(ff), monConIntB = .monConInt(gg)) %>%
+  # changing datetime format for ggplot
+  mutate_at(vars(Event.Date),as.POSIXct) %>%
+  # Rename and re-order the factor levels before the plot 
+  # https://stackoverflow.com/questions/12075037/ggplot-legends-change-labels-order-and-title
+  mutate(name = factor(name,levels = c(sideA,sideB)))
+  dates = c(as.POSIXct("1998-01-01"),as.POSIXct("2002-08-01"),as.POSIXct("2004-08-01"),
+            as.POSIXct("2006-09-01"),as.POSIXct("2008-08-01"))
+  plot = monConIntAB %>% 
+      ggplot(aes(x = Event.Date, y = intensity, group = name, color = name)) +
+      geom_point()+
+      geom_smooth(method = "loess", span = smoothVal, se = FALSE) +
+      geom_hline(yintercept = 14, color = "black", linetype = "dashed") +
+      annotate(geom = "vline", x = dates, xintercept = dates,
+               linetype = c("dashed", "dashed","dashed","dashed","dashed")) +
+      annotate(geom = "text", label = format(dates, format = "%b %y"),
+               x = dates, y = c(9,8,9,8,9),
+               size = 3, hjust = - 0.1) +
+      labs (caption = "Source: ICEWS 1995-2019",
+            x = "Date",
+            y = "Intensity",
+            color = "excl_interstate") +
+      scale_x_datetime(labels = date_format("%b %y"), 
+                       breaks = date_breaks("6 month")) +
+      scale_y_continuous(breaks = seq(8,21, by = 1)) +
+      theme_light() +
+      theme(axis.text.x = element_text(angle = 60, vjust = 1, size = 8, margin = margin (13,13,0,0)),
+            plot.margin = unit(c(0, 2, 1, 2), "cm"),
+            legend.position = "top")
+  return(plot)}
+intTrendActor = .monConIntTrend(dataActorLevel,sideA,sideB,tStart = "1995",tEnd = "2019",smoothVal = 0.2)
+grid.arrange(intTrendCountry,intTrendActor, nrow = 2, heights = c(8,8))
+````
+
+Nevertheless, even in the adjusted data set, I observe many events over the conflict trajectory that have a high intensity (see Table 1 for further descriptions) which often do not correspond to the observed intensities in the interstate conflict. This observation suggests that the events, labeled with the state name, also include non-state actors. Based on this assumption, I first address the following questions. How large is the share of these non-specifically attributed events? Do they have a noticeable impact on the measurement? 
+
+Figure 4 illustrates that the actors are not specified by name for the majority of events. Accordingly, these events strongly influence the conflict intensity trend without enabling us to clearly evaluate which event should be classified under the category of interstate conflict actions. 
+
+**Fig. 4** Proportion of Events with Non-Specified Actors
+
+````{r}
+# create data set (country level)
+.selectCountrylevel = function (ff,gg) {
+  selectionA = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, ff) & str_detect(Target.Country, gg)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict")) 
+  }
+  selectionB = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, gg) & str_detect(Target.Country, ff)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict"))
+  }
+  dyad = bind_rows(selectionA (eventsICEWS),selectionB (eventsICEWS))
+  return(dyad)
+}
+dataCountryLevel = .selectCountrylevel(sideA,sideB)
+# create data set (sorted by specific and unspecific labeled state actors)
+.sortStateActors = function (zz) {
+  setwd(here())
+  # identify all active conflict actors
+  .selectInstPer = function(x) {
+    df = x %>%
+      select(Source.Name) %>%
+      distinct() %>%
+      as_tibble()
+    return(df)
+  }
+  InstPer = .selectInstPer(zz)
+  # extract only state institutions
+  .selectInst = function(x) {
+    # extract the most relevant state institutions // https://stackoverflow.com/questions/23678691/converting-a-text-file-into-a-vector-in-r
+    relInst = scan(file = "relevant_institutions.txt", character(), quote = "", sep = ",")
+    relStateInst = c(paste0("^",sideA,"$"),paste0("^",sideB,"$"),relInst)
+    instList = paste(unlist(relStateInst), collapse = "|")
+    stateInst = x %>%
+      filter (str_detect(Source.Name, instList))
+    return(stateInst) }
+  inst = .selectInst(InstPer)
+  # delete wrong results
+  .deleteAct = function(x) {
+    deleteSet = scan(file = "irrelevant_institutions.txt", character(), quote = "", sep = ",")
+    delInst = paste(unlist(deleteSet), collapse = "|")
+    finListInst = x %>%
+      filter (!str_detect(Source.Name, delInst))
+    return(finListInst)}
+  finInst = .deleteAct(inst)
+  # create a list of all foreign policy decision-makers
+  .pullLeaders = function(x) {
+    df = read_xml("leader_FP.xml")
+    data = tibble(
+      Source.Name = df %>% xml_find_all(paste0(".//",x,"//.//.//name")) %>% xml_text()) %>%  
+      distinct()
+    return(data)
+  }
+  finPer = bind_rows(.pullLeaders(sideA),.pullLeaders(sideB))
+  # create a list of all active state actors
+  finInstPer = bind_rows(finInst,finPer)
+  # create new data set based on state leaders and institutions
+  .chooseStateEvents = function(x) {
+    compiNames = finInstPer %>% pull()
+    stateDF = x %>%
+      filter(Source.Name %in% compiNames) %>% 
+      filter(Target.Name %in% compiNames) %>%
+      select(Event.Date,Source.Name,Target.Name,CAMEO.Code) %>% 
+      mutate(distinction = rep("interstate"))
+    return(stateDF)
+  } # create data frame for all state actors (specified and unspecified)
+  .chooseStateEventsN = function(x) {
+    compiNames = finInstPer %>% 
+      filter(!str_detect(Source.Name,paste0("^",sideA,"$|","^",sideB,"$"))) %>% 
+      pull()
+    stateDF = x %>%
+      filter(Source.Name %in% compiNames) %>% 
+      filter(Target.Name %in% compiNames) %>%
+      select(Event.Date,Source.Name,Target.Name,CAMEO.Code) %>% 
+      mutate(distinction = rep("interstate_narrow"))
+    return(stateDF)
+  } # create data frame for all state actors (specified)
+  df = bind_rows(.chooseStateEvents(zz),.chooseStateEventsN(zz))
+  return(df)
+}
+dataStateActors = .sortStateActors(dataCountryLevel)
+# plot percentage of conflict actions 
+.plotPercent = function(x) {
+  df = x %>%
+    mutate(date = str_replace_all(Event.Date,"[0-9]{2}-[0-9]{2}$","01-01")) %>% 
+    mutate(date = as.POSIXct(date)) %>%
+    select(date,distinction) %>%
+    arrange(date) %>%
+    group_by(date) %>% 
+    mutate(sum = n()) %>% 
+    group_by(date,distinction) %>% 
+    mutate(count = n()) %>% 
+    mutate(percent = (100/sum)*count) %>%
+    mutate(id = ifelse(count > 999, 1, 0)) %>% 
+    distinct()
+  #https://stackoverflow.com/questions/6112803/how-to-create-a-consecutive-group-number
+  # setDT(df)[,group :=rleid(id)]
+  df$distinction <- factor(df$distinction,levels = c("interstate_narrow","interstate"))
+  graph = ggplot(df,aes(x = date,y = percent, fill = distinction)) + 
+    geom_col() +
+    # https://stackoverflow.com/questions/16725927/how-not-to-display-value-0-in-a-stacked-bar-chart-using-ggplot2
+    geom_text(data = subset(df,count != 0), aes(label = count), position = position_stack(vjust = 0.5), size = 2.5, color = "black") +
+    labs (caption = paste0("Source: ICEWS ",str_extract(min(x$Event.Date),"^[0-9]{4}")," - ",str_extract(max(x$Event.Date),"^[0-9]{4}")),
+          x = "Date",
+          y = "Coverage (%)") +
+    scale_x_datetime(labels = date_format("%Y"), 
+                     breaks = date_breaks("1 year")) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = 60, vjust = 1, size = 8, margin = margin (13,13,0,0)),
+          plot.margin = unit(c(1, 2, 1, 2), "cm"),legend.position = "top",legend.title = element_blank()) +
+    scale_fill_manual(values=c("#802626","#FF9999"))
+  return(graph)
+}
+plot = .plotPercent(dataStateActors)
+plot
+````
+
+Therefore, I now focus on events where state actors are clearly named. I use this ***narrowly defined data set*** (NDS-N) to determine the conflict trend. Then, I compare these results with those of the NDS. 
+
+Figure 5 illustrates that NDS-N included substantially fewer conflict events. Therefore, no meaningful trend can be determined for the beginning and end of the period under investigation, especially for Russia. The intensities of events range at a comprehensible level, whereby the events with the highest intensities cluster around the highlighted escalation phases. The trend line also provides an accurate representation of the interstate conflict, with the Georgian-Russian War representing the climax in the conflict trajectory.
+
+**Fig. 5** Intensity of Monthly Conflict Actions & Trend Line (Comparing NDS & NDS-N)
+
+````{r, fig.height = 8, fig.width = 10}
+# create data set (country level)
+.selectCountrylevel = function (ff,gg) {
+  selectionA = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, ff) & str_detect(Target.Country, gg)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict")) 
+  }
+  selectionB = function(x) {
+    x %>%
+      mutate(new_col = stringr::str_replace_all(Event.Date, "-[0-9]{2}$" , "-01")) %>%
+      filter(str_detect(Source.Country, gg) & str_detect(Target.Country, ff)) %>%
+      dplyr::select (new_col, Source.Country, Source.Name, Target.Country, Target.Name, CAMEO.Code, lvl0, quad_category) %>%
+      rename(Event.Date = new_col) %>%
+      filter(str_detect(quad_category, "material conflict|verbal conflict"))
+  }
+  dyad = bind_rows(selectionA (eventsICEWS),selectionB (eventsICEWS))
+  return(dyad)
+}
+dataCountryLevel = .selectCountrylevel(sideA,sideB)
+# create data set (actor level) 
+.selectActorLevel = function (zz,ff,gg) {
+  # identify all active conflict actors
+  .selectInstPer = function(x) {
+    df = x %>%
+      select(Source.Name) %>%
+      distinct() %>%
+      as_tibble()
+    return(df)
+  }
+  InstPer = .selectInstPer(zz)
+  # extract only state institutions
+  .selectInst = function(x) {
+    # extract the most relevant state institutions // https://stackoverflow.com/questions/23678691/converting-a-text-file-into-a-vector-in-r
+    relInst = scan(file = "relevant_institutions.txt", character(), quote = "", sep = ",")
+    relStateInst = c(paste0("^",sideA,"$"),paste0("^",sideB,"$"),relInst)
+    instList = paste(unlist(relStateInst), collapse = "|")
+    stateInst = x %>%
+      filter (str_detect(Source.Name, instList))
+    return(stateInst) }
+  inst = .selectInst(InstPer)
+  # delete wrong results
+  .deleteAct = function(x) {
+    deleteSet = scan(file = "irrelevant_institutions.txt", character(), quote = "", sep = ",")
+    delInst = paste(unlist(deleteSet), collapse = "|")
+    finListInst = x %>%
+      filter (!str_detect(Source.Name, delInst))
+    return(finListInst)}
+  finInst = .deleteAct(inst)
+  # create a list of all leaders and government officials till 2009
+  .pullLeaders = function(x) {
+    df = read_xml("leader_FP.xml")
+    data = tibble(
+      names = df %>% xml_find_all(paste0(".//",x,"//.//.//name")) %>% xml_text()) %>%  
+      distinct()
+    return(data)
+  }
+  finPer = bind_rows(.pullLeaders(sideA),.pullLeaders(sideB))
+  # compare the list of state actors with all conflict actors => only state actors
+  .chooseActivePer = function(x,y) {
+    actList = paste(unlist(x$names), collapse = "|")
+    stateAct = y %>%
+      filter (str_detect(Source.Name, actList))
+    return(stateAct)
+  }
+  finPer = .chooseActivePer (finPer,InstPer)
+  # create a list of all active state actors
+  finInstPer = bind_rows(finInst,finPer)
+  # create new data set based on state leaders and institutions
+  .chooseStateEvents = function(x) {
+    compiNames = as.vector(finInstPer$Source.Name)
+    sourceList = x %>%
+      filter(Source.Name %in% compiNames) %>%
+      filter(Target.Name %in% compiNames) 
+    return(sourceList)
+  }
+  confEvents = .chooseStateEvents(zz)
+  return(confEvents)
+}
+dataActorLevel = .selectActorLevel(dataCountryLevel,sideA,sideB)
+# create data set (actor level, narrow) 
+.selectActorLevelN = function (zz,ff,gg) {
+  # identify all active conflict actors
+  .selectInstPer = function(x) {
+    df = x %>%
+      select(Source.Name) %>%
+      distinct() %>%
+      as_tibble()
+    return(df)
+  }
+  InstPer = .selectInstPer(dataCountryLevel)
+  # extract only state institutions
+  .selectInst = function(x) {
+    # extract the most relevant state institutions // https://stackoverflow.com/questions/23678691/converting-a-text-file-into-a-vector-in-r
+    relStateInst = scan(file = "relevant_institutions.txt", character(), quote = "", sep = ",")
+    instList = paste(unlist(relStateInst), collapse = "|")
+    stateInst = x %>%
+      filter (str_detect(Source.Name, instList))
+    return(stateInst) }
+  inst = .selectInst(InstPer)
+  # delete wrong results
+  .deleteAct = function(x) {
+    deleteSet = scan(file = "irrelevant_institutions.txt", character(), quote = "", sep = ",")
+    delInst = paste(unlist(deleteSet), collapse = "|")
+    finListInst = x %>%
+      filter (!str_detect(Source.Name, delInst))
+    return(finListInst)}
+  finInst = .deleteAct(inst)
+  # create a list of all leaders and government officials till 2009
+  .pullLeaders = function(x) {
+    df = read_xml("leader_FP.xml")
+    data = tibble(
+      names = df %>% xml_find_all(paste0(".//",x,"//.//.//name")) %>% xml_text()) %>%  
+      distinct()
+    return(data)
+  }
+  finPer = bind_rows(.pullLeaders(sideA),.pullLeaders(sideB))
+  # compare the list of state actors with all conflict actors => only state actors
+  .chooseActivePer = function(x,y) {
+    actList = paste(unlist(x$names), collapse = "|")
+    stateAct = y %>%
+      filter (str_detect(Source.Name, actList))
+    return(stateAct)
+  }
+  finPer = .chooseActivePer (finPer,InstPer)
+  # create a list of all active state actors
+  finInstPer = bind_rows(finInst,finPer)
+  # create new data set based on state leaders and institutions
+  .chooseStateEvents = function(x) {
+    compiNames = as.vector(finInstPer$Source.Name)
+    sourceList = x %>%
+      filter(Source.Name %in% compiNames) %>%
+      filter(Target.Name %in% compiNames) 
+    return(sourceList)
+  }
+  confEvents = .chooseStateEvents(zz)
+  return(confEvents)
+}
+dataActorLevelN = .selectActorLevelN(dataCountryLevel,sideA,sideB)
+# plot conflict intensity trend line (actor level) 
+.monConIntTrend = function(df,ff,gg,tStart,tEnd,smoothVal) {
+  .monConInt = function(x) {
+    df %>%
+      filter(Source.Country == x) %>%
+      select(Event.Date,lvl0) %>%
+      filter(Event.Date >= tStart & Event.Date <= tEnd) %>%
+      group_by(Event.Date) %>%
+      slice(which.max(lvl0)) %>%
+      rename(intensity = lvl0) %>%
+      mutate(name = rep(x)) %>%
+      as.data.frame(stringsAsFactors = FALSE)
+  }
+  monConIntAB = bind_rows (monConIntA = .monConInt(ff), monConIntB = .monConInt(gg)) %>%
+    # changing datetime format for ggplot
+    mutate_at(vars(Event.Date),as.POSIXct) %>%
+    # Rename and re-order the factor levels before the plot 
+    # https://stackoverflow.com/questions/12075037/ggplot-legends-change-labels-order-and-title
+    mutate(name = factor(name,levels = c(sideA,sideB)))
+  dates = c(as.POSIXct("1998-01-01"),as.POSIXct("2002-08-01"),as.POSIXct("2004-08-01"),
+            as.POSIXct("2006-09-01"),as.POSIXct("2008-08-01"))
+  plot = monConIntAB %>% 
+    ggplot(aes(x = Event.Date, y = intensity, group = name, color = name)) +
+    geom_point()+
+    geom_smooth(method = "loess", span = smoothVal, se = FALSE) +
+    geom_hline(yintercept = 14, color = "black", linetype = "dashed") +
+    annotate(geom = "vline", x = dates, xintercept = dates,
+             linetype = c("dashed", "dashed","dashed","dashed","dashed")) +
+    annotate(geom = "text", label = format(dates, format = "%b %y"),
+             x = dates, y = c(9,8,9,8,9),
+             size = 3, hjust = - 0.1) +
+    labs (y = "Intensity",
+          color = "interstate") +
+    scale_x_datetime(labels = date_format("%b %y"), 
+                     breaks = date_breaks("6 month")) +
+    scale_y_continuous(breaks = seq(8,21, by = 1)) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = 60, vjust = 1, size = 8, margin = margin (13,13,0,0)),
+          axis.title.x = element_blank(),
+          plot.margin = unit(c(1, 2, 0.5, 2), "cm"),
+          legend.position = "top")
+  return(plot)}
+intTrendActor = .monConIntTrend(dataActorLevel,sideA,sideB,tStart = "1995",tEnd = "2019",smoothVal = 0.2)
+# plot conflict intensity trend line (actor level, narrow) 
+.monConIntTrend = function(df,ff,gg,tStart,tEnd,smoothVal) {
+  .monConInt = function(x) {
+    df %>%
+      filter(Source.Country == x) %>%
+      select(Event.Date,lvl0) %>%
+      filter(Event.Date >= tStart & Event.Date <= tEnd) %>%
+      group_by(Event.Date) %>%
+      slice(which.max(lvl0)) %>%
+      rename(intensity = lvl0) %>%
+      mutate(name = rep(x)) %>%
+      as.data.frame(stringsAsFactors = FALSE)
+  }
+  monConIntAB = bind_rows (monConIntA = .monConInt(ff), monConIntB = .monConInt(gg)) %>%
+    # changing datetime format for ggplot
+    mutate_at(vars(Event.Date),as.POSIXct) %>%
+    # Rename and re-order the factor levels before the plot 
+    # https://stackoverflow.com/questions/12075037/ggplot-legends-change-labels-order-and-title
+    mutate(name = factor(name,levels = c(sideA,sideB)))
+  dates = c(as.POSIXct("1998-01-01"),as.POSIXct("2002-08-01"),as.POSIXct("2004-08-01"),
+            as.POSIXct("2006-09-01"),as.POSIXct("2008-08-01"))
+  plot = monConIntAB %>% 
+    ggplot(aes(x = Event.Date, y = intensity, group = name, color = name)) +
+    geom_point()+
+    geom_smooth(method = "loess", span = smoothVal, se = FALSE) +
+    geom_hline(yintercept = 14, color = "black", linetype = "dashed") +
+    annotate(geom = "vline", x = dates, xintercept = dates,
+             linetype = c("dashed", "dashed","dashed","dashed","dashed")) +
+    annotate(geom = "text", label = format(dates, format = "%b %y"),
+             x = dates, y = c(9,8,9,8,9),
+             size = 3, hjust = - 0.1) +
+    labs (caption = "Source: ICEWS 1995-2019",
+          x = "Date",
+          y = "Intensity",
+          color = "interstate_narrow") +
+    scale_x_datetime(labels = date_format("%b %y"), 
+                     breaks = date_breaks("6 month")) +
+    scale_y_continuous(breaks = seq(8,21, by = 1)) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = 60, vjust = 1, size = 8, margin = margin (13,13,0,0)),
+          plot.margin = unit(c(0, 2, 1, 2), "cm"),
+          legend.position = "top")
+  return(plot)}
+intTrendActorN = .monConIntTrend(dataActorLevelN,sideA,sideB,tStart = "1995",tEnd = "2019",smoothVal = 0.3)
+grid.arrange(intTrendActor,intTrendActorN, nrow = 2, heights = c(8,8))
+````
+
+Finally, the identification of interstate events in the ICEWS data set offered interesting insights for the determination of interstate conflict intensities.
+
+(1) The conflict events between Russia and Georgia (identified by the country variables) include many events involving non-state actors. These events have no direct relevance to the interstate intensity measurement and can distort the intensity determination considerably, especially in the case of a monthly measurement (see figure 2). Accordingly, the intensity trend is much more distinct after cleaning the data set. Furthermore, the trends are consistent with central escalation phases in the conflict history of the two states.
+
+(2) Nevertheless, the adjusted data set includes a large number of events that have no precise label (identified by the name variables) and thus are not clearly attributable. Furthermore, the intensity of some events appears to be too high. This suggests that these events do not only cover interstate conflict actions. Based on this assumption, I then select events that can be clearly linked to state actors. This data compilation leads to significantly more plausible results.
+
+According to these observations, the ICEWS data set is only conditionally suitable for determining the intensity of interstate conflicts. The accurate measurement of interstate intensity trends requires pre-selection of events based on the naming of actors. However, it is important to note that these results exclusively concern the Russian-Georgian conflict. Nonetheless, they provide valuable guidance on how to handle ICEWS data when investigating interstate relations.
+
+<br>
+
+[^1]: Boschee E, Lautenschlager J, O’Brien S, et al. (2015) ICEWS Coded Event Data. Harvard Dataverse.
+
+</div>
