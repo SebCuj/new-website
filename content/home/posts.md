@@ -1,5 +1,5 @@
 ---
-# active: false
+active: false
 draft: true
 
 # An instance of the Pages widget.
