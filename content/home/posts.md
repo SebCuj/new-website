@@ -1,6 +1,6 @@
 ---
-active: false
-draft: true
+active: TRUE
+draft: TRUE
 
 # An instance of the Pages widget.
 # Documentation: https://wowchemy.com/docs/page-builder/

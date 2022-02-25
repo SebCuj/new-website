@@ -7,6 +7,7 @@ interests:
 - Foreign Policy Analysis
 - Political Psychology
 - Computational Social Science
+- Self-Determination Conflicts
 organizations:
 - name: Heidelberg University
   url: https://www.uni-heidelberg.de/de
