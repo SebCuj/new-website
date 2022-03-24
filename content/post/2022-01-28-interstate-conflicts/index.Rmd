@@ -33,7 +33,7 @@ opts_chunk$set(echo = show,
 
 <br>
 
-The *Integrated Crisis Early Warning Systems* (ICEWS) data set contains a large amount of verbal as well as physical conflict actions promising an accurate representation of conflict dynamics.[^1] In this post, I take a closer look at the usefulness of the data set for determining interstate conflict intensities and their development over time. For this purpose, I take a closer look at the available data on the inter-state conflict actions between Russia and Georgia. The following questions guide my investigation:
+The *Integrated Crisis Early Warning Systems* (ICEWS) data set contains a large amount of verbal as well as physical conflict actions promising an accurate representation of conflict dynamics.[^1] In this post, I take a closer look at the usefulness of the data set for determining interstate conflict intensities and their development over time. For this purpose, I look more closely at the available data on the interstate conflict actions between Russia and Georgia. The following questions guide my investigation:
 
 * How can we identify interstate conflict actions in the data set?
 
