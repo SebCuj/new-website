@@ -41,7 +41,7 @@ The *Integrated Crisis Early Warning Systems* (ICEWS) data set contains a large 
 
 * Which approach is advisable for determining interstate intensity trends with the ICEWS data set?
 
-Looking at the identified conflict events (Tab. 1), the acting parties are associated with a country (Source/Target.Country) and then further specified by a name (Source/Target.Name). For many events, however, the country´s name is only provided as a specification. In addition, there is no distinction be-tween intrastate or interstate conflict events. 
+Looking at the identified conflict events (Tab. 1), the acting parties are associated with a country (Source/Target.Country) and then further specified by a name (Source/Target.Name). For many events, however, the country´s name is only provided as a specification. In addition, there is no distinction between intrastate or interstate conflict events. 
 
 **Tab. 1** All Conflict Events between Russia and Georgia determined by the Country Variables
 
