@@ -120,7 +120,7 @@ dataCountryLevel %>%
 
 <br>
 
-Each conflict action is also assigned an intensity whereby different scales are used. Here, I use the up-per range of the CAMEO scale which is used to classify conflict actions (greater than 9). Tab. 2 shows all levels (lvl0) and sub-levels (lvl1) from the intensity scale including a short description. I only use the top level of the scale to determine the intensity of conflict actions.
+Each conflict action is also assigned an intensity whereby different scales are used. Here, I use the upper range of the CAMEO scale which is used to classify conflict actions (greater than 9). Tab. 2 shows all levels (lvl0) and sublevels (lvl1) from the intensity scale including a short description. I only use the top level of the scale to determine the intensity of conflict actions.
 
 **Tab. 2** Cooperation and Conflict Intensities according to CAMEO Scale
 
@@ -610,7 +610,7 @@ intTrendActor = .monConIntTrend(dataActorLevel,sideA,sideB,tStart = "1995",tEnd 
 grid.arrange(intTrendCountry,intTrendActor, nrow = 2, heights = c(8,8))
 ````
 
-Nevertheless, even in the adjusted data set, I observe many events over the conflict trajectory that have a high intensity (see Table 1 for further descriptions) which often do not correspond to the ob-served intensities in the interstate conflict. This observation suggests that the events, labeled with the state name, also include non-state actors. Based on this assumption, I first address the following questions. How large is the share of these non-specifically attributed events? Do they have a noticeable impact on the measurement? 
+Nevertheless, even in the adjusted data set, I observe many events over the conflict trajectory that have a high intensity (see Table 1 for further descriptions) which often do not correspond to the observed intensities in the interstate conflict. This observation suggests that the events, labeled with the state name, also include non-state actors. Based on this assumption, I first address the following questions. How large is the share of these non-specifically attributed events? Do they have a noticeable impact on the measurement? 
 
 Figure 4 illustrates that the actors are not specified by name for the majority of events. Accordingly, these events strongly influence the conflict intensity trend without enabling us to clearly evaluate which event should be classified under the category of interstate conflict actions. 
 
@@ -986,7 +986,7 @@ Finally, the identification of interstate events in the ICEWS data set offered i
 
 (2) Nevertheless, the adjusted data set includes a large number of events that have no precise label (identified by the name variables) and thus are not clearly attributable. Furthermore, the intensity of some events appears to be too high. This suggests that these events do not only cover interstate conflict actions. Based on this assumption, I then select events that can be clearly linked to state actors. This data compilation leads to significantly more plausible results.
 
-According to these observations, the ICEWS data set is only conditionally suitable for determining the intensity of interstate conflicts. The accurate measurement of interstate intensity trends requires pre-selection of events based on the naming of actors.[^2] However, it is important to note that these results exclusively concern the Russian-Georgian conflict. Nonetheless, they provide valuable guidance on how to handle ICEWS data when investigating interstate relations.
+According to these observations, the ICEWS data set is only conditionally suitable for determining the intensity of interstate conflicts. The accurate measurement of interstate intensity trends requires preselection of events based on the naming of actors.[^2] However, it is important to note that these results exclusively concern the Russian-Georgian conflict. Nonetheless, they provide valuable guidance on how to handle ICEWS data when investigating interstate relations.
 
 <br>
 
