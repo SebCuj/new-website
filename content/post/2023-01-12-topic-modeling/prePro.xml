@@ -1,0 +1,961 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<words>
+	<synoCountries>
+		<China>
+		\bChina
+		\bchin['’a-z]*
+		\bChin['’a-z]*
+		\bCHINA['’A-Z]*
+		</China>
+		<Japan>
+		\bJapan['’a-z]*
+		\bJAPAN
+		\bjapan['’a-z]*
+		</Japan>
+		<India>
+		\bIndia['’a-z]*
+		\bINDIA['’A-Z]*
+		</India>
+		<Pakistan>
+		\bPakistan['’a-z]*
+		\bPAKISTAN['’A-Z]*
+		</Pakistan>
+		<Georgia>
+		\bGeorgia['’a-z]*
+		\bGEORGIA['’A-Z]*
+		</Georgia>
+		<Russia>
+		\b[rR]ussia['’a-z]*
+		\bRussian Federation
+		\bRUSSIA['’A-Z]*
+		</Russia>
+		<Greece>
+		\bGreece
+		\bGreek['’a-z]*
+		\bGREEK['’A-Z]*
+		\bGREECE
+		</Greece>
+		<Turkey>
+		\b[tT]urk['’a-z]*
+		\bTURK['’A-Z]*
+		</Turkey>
+		<Germany>
+		\bGerman['’a-z]*
+		\bGERMAN['’A-Z]*
+		</Germany>
+		<Iran>
+		\bIran['’a-z]*
+		\bIRAN['’A-Z]*
+		</Iran>
+		<US>
+		\bUnited States
+		\bUS
+		\bUSA
+		\bUNITED STATES
+		\bWhite House
+		united_states
+		</US>
+		<Estonia>
+		\bEstonia['’a-z]*
+		\bESTONIA['’A-Z]*
+		</Estonia>
+		<SaudiArabia>
+		\bSaudi Arabia['’a-z]*
+		\bSAUDI ARABIA['’A-Z]*
+		\bSaud['’a-z]*
+		</SaudiArabia>
+		<Israel>
+		\bIsrael['’a-z]*
+		\bISRAEL['’A-Z]*
+		</Israel>
+		<Cyprus>
+		\bCypr['’a-z]*
+		\bCYPR['’A-Z]*
+		</Cyprus>
+		<Egypt>
+		\bEgypt['’a-z]*
+		\bEGYPT['’A-Z]*
+		</Egypt>
+		<Ukraine>
+		\bUkrain['’a-z]*
+		\bUKRAIN['’A-Z]*
+		</Ukraine>
+		<Syria>
+		\bSyria['’a-z]*
+		\bSYRIA['’A-Z]*
+		</Syria>
+		<Qatar>
+		\bQatar['’a-z]*
+		\bQATAR['’A-Z]*
+		</Qatar>
+		<NorthKorea>
+		\b[nN]orth [kK]orea['’a-z]*
+		\b[nN][kK]orea['’a-z]*
+		\bthe North
+		\bThe North
+		\bNorth and
+		\bNORTH KOREA['’A-Z]*
+		\b[nN][kK]or\b
+		north_korea
+		</NorthKorea>
+		<SouthKorea>
+		\bSouth Korea['’a-z]*
+		\bSKorea['’a-z]*
+		\bS\.Korea['’a-z]*
+		\bthe South
+		\bThe South
+		\bSOUTH KOREA['’A-Z]*
+		south_korea
+		</SouthKorea>
+		<Slovenia>
+		\b[sS]lovenia['’a-z]*
+		\bSLOVENIA['’A-S]*
+		</Slovenia>
+		<Croatia>
+		\b[cC]roatia['’a-z]*
+		\bCROATIA['’A-S]*
+		</Croatia>
+		<Ethiopia>
+		\b[eE]thiopia['’a-z]*
+		\bETHIOPIA['’A-S]*
+		</Ethiopia>
+		<Sudan>
+		\b[sS]udan['’a-z]*
+		\bSUDAN['’A-S]*
+		</Sudan>
+		<Venezuela>
+		\b[vV]enezuela['’a-z]*
+		\bVENEZUELA['’A-S]*
+		</Venezuela>
+		<Colombia>
+		\b[cC]olombia['’a-z]*
+		\bCOLOMBIA['’A-S]*
+		</Colombia>
+	</synoCountries>
+	<groups>
+		# country names
+		<term>
+			<default>
+			georgia
+			</default>
+			<synonyms>
+			\b[gG]eorgia['’a-z]*
+			\bGEORGIA['’A-Z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			russia
+			</default>
+			<synonyms>
+			\b[rR]ussia['’a-z]*
+			\bRussian Federation
+			\bRUSSIA['’A-Z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			united_states
+			</default>
+			<synonyms>
+			United States of America
+			United States
+			USA
+			US
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			north_korea
+			</default>
+			<synonyms>
+			\bNorth Korea['’a-z]*
+			\b[nN][kK]orea['’a-z]*
+			\bNORTH KOREA['’A-Z]*
+			\b[nN].[kK]orea['’a-z]*
+			\b[nN][kK]or\b
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			south_korea
+			</default>
+			<synonyms>
+			\bSouth Korea[a-z]*
+			\b[sS][kK]orea[a-z]*
+			\bSOUTH KOREA[A-Z]*
+			\b[sS].[kK]orea['’a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			new_zealand
+			</default>
+			<synonyms>
+			\b[nN]ew [zZ]ealand['’a-z]*
+			\bNEW ZEALAND['’A-Z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			syria
+			</default>
+			<synonyms>
+			\b[sS]yria['’a-z]*
+			\bSYRIA['’A-Z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			turkey
+			</default>
+			<synonyms>
+			\b[tT]urk['’a-z]*
+			\bTURK['’A-Z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			islamic_state
+			</default>
+			<synonyms>
+			\b[iI]slamic [sS]tate['’a-z]*
+			\bISIS\b
+			\bISIL\b
+			\bIS\b
+			</synonyms>
+		</term>
+		# locations
+		<term>
+			<default>
+			black_sea
+			</default>
+			<synonyms>
+			Black Sea
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			east_china_sea
+			</default>
+			<synonyms>
+			East China Sea
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			yasukuni_shrine
+			</default>
+			<synonyms>
+			[yY]asukuni
+			[yY]asukuni [sS]hrine
+			[yY]asukuni [wW]ar [sS]hrine
+			Tokyo war shrine
+			Tokyos [yY]asukuni [sS]hrine
+			[wW]ar shrine
+			Tokyo shrine
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			south_ossetia
+			</default>
+			<synonyms>
+			[sS]outh [Oo]ssetia['’a-z]*
+			[sS].[Oo]ssetia['’a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			bosphorus_strait
+			</default>
+			<synonyms>
+			[bB]osphorus [sS]trait['’a-z]*
+			BOSPHORUS STRAIT['’A-Z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			white_house
+			</default>
+			<synonyms>
+			[wW]hite [hH]ouse['’a-z]*
+			WHITE HOUSE['’A-Z]*
+			</synonyms>
+		</term>
+		# individuals
+		<term>
+			<default>
+			war_criminals
+			</default>
+			<synonyms>
+			[wW]ar criminal[a-z]*
+			Class A war criminal[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nationalists
+			</default>
+			<synonyms>
+			[nN]ationalist group[a-z]*
+			</synonyms>
+		</term>
+		# terms
+		<term>
+			<default>
+			war_dead
+			</default>
+			<synonyms>
+			[wW]ar dead[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			shinto_religion
+			</default>
+			<synonyms>
+			[sS]hinto relgion
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			war_crime
+			</default>
+			<synonyms>
+			[wW]ar crime[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			conflict_zone
+			</default>
+			<synonyms>
+			[cC]onflict zone[a-z]*
+			[cC]ombat zone[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			civil_war
+			</default>
+			<synonyms>
+			[cC]ivil war[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			wartime_history
+			</default>
+			<synonyms>
+			wartime history
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			colonial_rule
+			</default>
+			<synonyms>
+			[cC]olonial [rR]ule
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			sex_slavery
+			</default>
+			<synonyms>
+			[sS]ex [sS]lavery
+			[sS]exual [sS]lavery
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			one_china_policy
+			</default>
+			<synonyms>
+			[oO]ne [cC]hina [pP]olicy
+			ONE CHINA POLICY
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			comfort_women
+			</default>
+			<synonyms>
+			[cC]omfort [wW]oman
+			[cC]omfort [wW]omen
+			COMFORT WOMAN
+			COMFORT WOMEN
+			</synonyms>
+		</term>
+		# events
+		<term>
+			<default>
+			second_world_war
+			</default>
+			<synonyms>
+			[wW]orld [wW]ar II
+			[wW]orld [wW]ar [tT]wo
+			[sS]econd [wW]orld [wW]ar
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			vietnam_war
+			</default>
+			<synonyms>
+			[vV]ietnam [wW]ar
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			war_against_terrorism
+			</default>
+			<synonyms>
+			[wW]ar against terrorism
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			iraq_war
+			</default>
+			<synonyms>
+			[iI]raq [wW]ar
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			cold_war
+			</default>
+			<synonyms>
+			[cC]old [wW]ar
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nuclear_test
+			</default>
+			<synonyms>
+			[nN]uclear [tT]est[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			rose_revolution
+			</default>
+			<synonyms>
+			[rR]ose [rR]evolution
+			</synonyms>
+		</term>
+		# Organizations of United Nations 
+		<term>
+			<default>
+			un_security_council
+			</default>
+			<synonyms>
+			United Nations Security Council
+			UN Security Council
+			Security Council
+			UNSC
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			un_general_assembly
+			</default>
+			<synonyms>
+			United Nations General Assembly
+			UN General Assembly
+			GENERAL ASSEMBLY
+			General Assembly
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			permanent_member
+			</default>
+			<synonyms>
+			permanent member[a-z]*
+			permanent membership[a-z]*
+			permanent seat[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			united_nations
+			</default>
+			<synonyms>
+			United Nations
+			\bUN\b
+			</synonyms>
+		</term>
+		# Further internatioal Organizations
+		<term>
+			<default>
+			european_union
+			</default>
+			<synonyms>
+			European Union
+			EUROPEAN UNION
+			EU
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			apec
+			</default>
+			<synonyms>
+			Asia-Pacific Economic Cooperation
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nato
+			</default>
+			<synonyms>
+			North Atlantic Treaty Organization
+			North Atlantic Treaty Organisation
+			North Atlantic Alliance
+			NATO
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			osce
+			</default>
+			<synonyms>
+			Organization for Security and Cooperation in Europe
+			Organization for Security and Co-operation in Europe
+			OSCE
+			</synonyms>
+		</term>
+		# state institutions
+		<term>
+			<default>
+			high_court
+			</default>
+			<synonyms>
+			[hH]igh [cC]ourt
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			lower_court
+			</default>
+			<synonyms>
+			[lL]ower [cC]ourt
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			supreme_court
+			</default>
+			<synonyms>
+			[sS]upreme [cC]ourt
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			new_leadership
+			</default>
+			<synonyms>
+			[nN]ew [lL]eadership
+			[nN]ew [pP]rime [mM]minister
+			[nN]ew [lL]eader
+			[nN]ew [pP]resident
+			</synonyms>
+		</term>
+		# Political parties
+		<term>
+			<default>
+			liberal_democratic_party
+			</default>
+			<synonyms>
+			[lL]iberal [dD]emocratic [pP]arty
+			</synonyms>
+		</term>
+		# cities
+		<term>
+			<default>
+			new_delhi
+			</default>
+			<synonyms>
+			[nN]ew [dD]elhi[a-z]*
+			</synonyms>
+		</term>
+		# Policies
+		<term>
+			<default>
+			school_text_book
+			</default>
+			<synonyms>
+			[sS]chool text book[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			gas
+			</default>
+			<synonyms>
+			[gG]as resource[a-z]*
+			[nN]atural gas
+			[uU]ndersea gas deposit[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			agricultural_goods
+			</default>
+			<synonyms>
+			[aA]gricultural good[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nuclear_program
+			</default>
+			<synonyms>
+			[nN]uclear programme[a-z]*
+			[nN]uclear program[a-z]*
+			[nN]uclear issue[a-z]*
+			[nN]uclear fuel enrichment program[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nuclear_weapons_program
+			</default>
+			<synonyms>
+			[nN]uclear weapons program[a-z]*
+			[nN]uclear arms program[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nuclear_weapon
+			</default>
+			<synonyms>
+			[nN]uclear [wW]eapon[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			economic_development
+			</default>
+			<synonyms>
+			[eE]conomic development
+			[eE]conomic prosperity
+			[eE]conomic benefit[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			economic_boom
+			</default>
+			<synonyms>
+			[eE]conomic boom
+			[eE]conomic success
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			security_guarantee
+			</default>
+			<synonyms>
+			[sS]ecurity guarantee[a-z]*
+			[sS]ecurity assurance[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			un_reform
+			</default>
+			<synonyms>
+			United Nations reform[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			security_issues
+			</default>
+			<synonyms>
+			[sS]ecurity_issue[a-z]*
+			peace and regional security
+			</synonyms>
+		</term>
+		# conflict
+		<term>
+			<default>
+			rivalry
+			</default>
+			<synonyms>
+			[rR]egional dominance
+			[rR]ival[a-z]*
+			[rR]egionl rival[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			travel_ban
+			</default>
+			<synonyms>
+			[tT]ravel ban[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			trade_dispute
+			</default>
+			<synonyms>
+			[tT]rade dispute[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			territorial_dispute
+			</default>
+			<synonyms>
+			[dD]isputed sea[a-z]*
+			[dD]isputed water[a-z]*
+			</synonyms>
+		</term>
+		# cooperation
+		<term>
+			<default>
+			security_talk
+			</default>
+			<synonyms>
+			[Ss]ecurity talk[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			multilateral_talk
+			</default>
+			<synonyms>
+			[mM]ultilateral talk[a-z]*
+			[mM]ultilateral meeting[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			bilateral_talk
+			</default>
+			<synonyms>
+			[bB]ilateral talk[a-z]*
+			[bB]ilateral meeting[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			six_party_talk
+			</default>
+			<synonyms>
+			[sS]ix[-\\s]*party talk[a-z]*
+			[sS]ix[-\\s]*nation talk[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			trade_talk
+			</default>
+			<synonyms>
+			[tT]rade talk[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nuclear_disarmament_talk
+			</default>
+			<synonyms>
+			[nN]uclear disarmament talk[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			nuclear_talk
+			</default>
+			<synonyms>
+			[nN]uclear talk[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			summit_talk
+			</default>
+			<synonyms>
+			[sS]ummit talk[a-z]*
+			[sS]ummit meeting[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			economic_ties
+			</default>
+			<synonyms>
+			[eE]conomic ties
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			economic_conference
+			</default>
+			<synonyms>
+			[eE]conomic conference[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			apec_summit
+			</default>
+			<synonyms>
+			APEC summit
+			apec summit
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			free_trade_agreement
+			</default>
+			<synonyms>
+			[fF]ree trade agreement[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			free_trade
+			</default>
+			<synonyms>
+			[fF]ree trade
+			elimination of trade barriers
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			security_arrangement
+			</default>
+			<synonyms>
+			[sS]ecurity arrangement[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			diplomatic_relations
+			</default>
+			<synonyms>
+			[dD]iplomatic relation[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			economic_cooperation
+			</default>
+			<synonyms>
+			[eE]conomic cooperation[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			humanitarian_aid
+			</default>
+			<synonyms>
+			[fF]ood donation[a-z]*
+			</synonyms>
+		</term>
+		<term>
+			<default>
+			economic_aid
+			</default>
+			<synonyms>
+			[eE]conomic aid
+			</synonyms>
+		</term>
+	</groups>
+	<leisureAct>
+	soccer
+	football
+	tennis
+	movie
+	baseball
+	</leisureAct>
+	<stopWords>
+		\bchief\b
+		\bvice\b
+		\boffice\b
+		\bpremier\b
+		\bsecretary\b
+		\bdeputy\b
+		\bpresident\b
+		\bleader\b
+		\bprime\b
+		\bminister[a-z]*\b
+		\bmember[a-z]*\b
+		\bpm\b
+		\bministry\b
+		\bgovernment[a-z]*\b
+		\bchancellor\b
+		\bspokes[a-z]*\b
+		\bregion[a-z]*\b
+		\bcountr[a-z]*\b
+		\bnation[a-z]{0,1}\b
+		\bstate[a-z]*\b
+		\basia[a-z]*\b
+		\bworld\b
+		\bcounty\b
+		\bdecision\b
+		\bissue\b
+		\bhistory\b
+		\brelations\b
+		\bforeign\b
+		\bofficial\b
+		\bpeople\b
+		\binternational\b
+		\bcity\b
+		\bone\b
+		first
+		monday
+		tuesday
+		wednesday
+		thursday
+		friday
+		saturday
+		sunday
+		januar
+		februar
+		march
+		april
+		may
+		june
+		july
+		august
+		september
+		october
+		november
+		december
+		year[a-z]*
+		month[a-z]*
+		week[a-z]*
+		day[a-z]*
+		\btime\b
+		\bnews\b
+		\bwrap\b
+		\bspot\b
+		tokyo
+		seoul
+		\bkorean\b
+		\bnorth\b
+		\bnew\b
+		\bway\b
+		\bset\b
+		capital
+		\bpart\b
+		\bwork\
+		\bend\b
+		\bmofa\b
+		\bcomment[a-z]*
+		\bdaily\b
+		\bbriefing[a-z]*
+		\bpress\b
+		\bmeeting[a-z]*
+</stopWords>
+</words>
