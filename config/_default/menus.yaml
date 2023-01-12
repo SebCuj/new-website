@@ -8,20 +8,20 @@ main:
 
   - name: Posts
     url: '#posts'
-    weight: 10
+    weight: 20
+  - name: Publications
+    url: '#featured'
+    weight: 30
   - name: Projects
     url: '#projects'
-    weight: 20
+    weight: 40
 #  - name: Talks
 #    url: '#talks'
 #    weight: 30
 #  - name: Courses
 #    url: courses/
 #    weight: 60
-  - name: Publications
-    url: '#featured'
-    weight: 30
   - name: Contact
     url: '#contact'
-    weight: 40
+    weight: 130
     
