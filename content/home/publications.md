@@ -1,5 +1,5 @@
 ---
-active: true
+active: TRUE
 ---
 # An instance of the Pages widget.
 # Documentation: https://wowchemy.com/docs/page-builder/
@@ -9,7 +9,7 @@ widget: pages
 headless: true
 
 # Order that this section appears on the page.
-weight: 90
+weight: 30
 
 title: Recent Publications
 subtitle: ''
