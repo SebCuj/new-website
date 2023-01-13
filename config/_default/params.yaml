@@ -157,4 +157,7 @@ cms:
   local_backend: false
 icon:
   pack:
-    ai: false
+    ai: true
+extensions:
+  academicons:
+    enable: true

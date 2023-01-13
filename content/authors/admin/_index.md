@@ -25,6 +25,15 @@ social:
 - icon: github
   icon_pack: fab
   link: https://github.com/SebCuj
+- icon: osf
+  icon_pack: ai
+  link: https://osf.io/6a5fq
+- icon: orcid
+  icon_pack: ai
+  link: https://orcid.org/0000-0001-7772-366X
+# - icon: cv
+#  icon_pack: ai
+#  link:
 superuser: true
 title: Sebastian Cujai
 ---
