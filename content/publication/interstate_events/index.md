@@ -3,7 +3,7 @@ title: "Determination of Interstate Conflict Trends with ICEWS"
 authors: 
 - Sebastian Cujai
 date: "2022-01-03T00:00:00Z"
-publication: "Blog"
+publication: "Blog Post"
 publication_short: "In: *sebastiancujai.com*. Available at: https://tinyurl.com/2dyh67su"
 publication_types: ["0"]
 url_code: 'https://osf.io/p3kse/'
