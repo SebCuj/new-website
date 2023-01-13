@@ -18,7 +18,7 @@ social:
   link: /#contact
 - display:
     header: false
-  icon: twitter
+- icon: twitter
   icon_pack: fab
   label: Follow me on Twitter
   link: https://twitter.com/CujSeb
