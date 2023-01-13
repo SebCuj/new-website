@@ -22,9 +22,9 @@ social:
   icon_pack: fab
   label: Follow me on Twitter
   link: https://twitter.com/CujSeb
-- icon: github
-  icon_pack: fab
-  link: https://github.com/SebCuj
+#- icon: github
+#  icon_pack: fab
+#  link: https://github.com/SebCuj
 - icon: osf
   icon_pack: ai
   link: https://osf.io/6a5fq
